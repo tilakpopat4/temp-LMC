@@ -11204,7 +11204,7 @@ function generatePage1KarajManganiHTML(loan, isPageBreak = false) {
     <div class="print-page print-voucher print-requisition-form ${pageBreakClass}">
         
         <!-- TOP HALF: APPLICATION FORM -->
-        <div style="display:flex; flex-direction:column; justify-content:space-between; flex:1.35; padding-bottom:10px;">
+        <div style="display:flex; flex-direction:column; flex:1.35; padding-bottom:10px;">
             <div>
                 <!-- Header -->
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
@@ -11276,9 +11276,6 @@ function generatePage1KarajManganiHTML(loan, isPageBreak = false) {
                     <div style="font-weight:800; font-size:11.5px;">(<strong>${loan.borrowerName}</strong>)</div>
                 </div>
             </div>
-        </div>
-
-        </div>
 
         <!-- BOTTOM HALF: OFFICE SHERO -->
         <div style="display:flex; flex-direction:column; flex:0.75; border-top:1.8px solid #000000; padding-top:10px;">
@@ -11307,8 +11304,9 @@ function generatePage1KarajManganiHTML(loan, isPageBreak = false) {
                 <p style="font-size:11.8px; line-height:1.68; margin:6px 0 10px 0; text-align:justify;">
                     વેલ્યુએશન રિપોર્ટમાં દર્શાવ્યા મુજબના સોનાનાં દાગીના થાલમાં લઈને તેની કુલ કિંમત રૂ. <strong>${valuationAmt.toLocaleString("en-IN")}/-</strong> ના <strong>${ltv}%</strong> ટકા લેખે ધિરાણની રકમ રૂ. <strong>${sanctionedAmt.toLocaleString("en-IN")}/-</strong> અંકે રૂપિયા <strong>${amountInWords} પૂરા</strong> નો બેંકના સોનાના દાગીના સામે ધિરાણના નિયમાનુસાર ચુકાદો કરવાની મંજુરી આપવામાં આવે છે. આજરોજ ઉપરોક્ત દાગીનાનું સીલબંધ પેકેટ અરજદાર પાસેથી સંભાળી લૉકરમાં મુકેલ છે.
                 </p>
+            </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:6px; padding-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:6px; padding-bottom:4px;">
                     <div style="text-align:center; width:42%;">
                         <div style="display:inline-flex; align-items:flex-end; justify-content:center; gap:4px; margin-bottom:4px;">
                             <span style="font-weight:bold; font-size:13px;">X</span>
@@ -11656,7 +11654,7 @@ function generatePage3ReceiptsHTML(loan, isPageBreak = true) {
     <div class="print-page print-voucher print-requisition-form ${pageBreakClass}">
         
         <!-- TOP SECTION: CUSTOMER RECEIPT -->
-        <div style="display:flex; flex-direction:column; justify-content:space-between; flex:1.45; padding-bottom:8px;">
+        <div style="display:flex; flex-direction:column; flex:1.45; padding-bottom:8px;">
             <div>
                 <!-- Header -->
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
