@@ -1,4 +1,4 @@
-﻿// ==================== INITIAL SEED DATA ====================
+// ==================== INITIAL SEED DATA ====================
 const INITIAL_BRANCHES = [
     { code: "99", name: "HEAD OFFICE" },
     { code: "01", name: "AZADCHOWK BRANCH" },
@@ -3660,7 +3660,7 @@ function printVoucher(loanId, format) {
                     </div>
 
                     <!-- Footer: Location, Date (Left) and Borrower Signature (Right) -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 25px; font-weight: 700; font-size: 14.5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; font-weight: 700; font-size: 14.5px;">
                         <div style="line-height: 1.5; text-align: left;">
                             <div>સ્થળઃ- ${loan.branchName}</div>
                             <div>તારીખઃ- ${formatDateDMY(loan.date)}</div>

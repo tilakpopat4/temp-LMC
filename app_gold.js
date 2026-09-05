@@ -11102,7 +11102,7 @@ function generateLetterOfPledgeHTML(loan, isPageBreak = true) {
 
     return `
     <div class="print-page print-voucher print-pledge-letter ${pageBreakClass}">
-        <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+        <div style="flex:1; display:flex; flex-direction:column;">
             
             <!-- Continuous Content Flow: Header, Recipient, Declaration & All 10 Clauses -->
             <div>
@@ -11165,7 +11165,7 @@ function generateLetterOfPledgeHTML(loan, isPageBreak = true) {
             </div>
 
             <!-- Footer & Signatures (Anchored Cleanly at Page Bottom Without Partition Line) -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:15px;">
                 <div style="font-size:13px; font-weight:800; line-height:1.65;">
                     સ્થળ :- <strong>${branchInfo.cleanGuj}</strong><br>
                     તારીખ :- <strong>${dateFormatted}</strong>
@@ -11278,8 +11278,10 @@ function generatePage1KarajManganiHTML(loan, isPageBreak = false) {
             </div>
         </div>
 
+        </div>
+
         <!-- BOTTOM HALF: OFFICE SHERO -->
-        <div style="display:flex; flex-direction:column; justify-content:space-between; flex:0.75; border-top:1.8px solid #000000; padding-top:10px;">
+        <div style="display:flex; flex-direction:column; flex:0.75; border-top:1.8px solid #000000; padding-top:10px;">
             <div>
                 <div style="display:flex; align-items:center; width:100%; margin:2px 0 8px 0;">
                     <div style="flex:1; border-top:1.5px solid #000000; height:2px;"></div>
@@ -11305,22 +11307,22 @@ function generatePage1KarajManganiHTML(loan, isPageBreak = false) {
                 <p style="font-size:11.8px; line-height:1.68; margin:6px 0 10px 0; text-align:justify;">
                     વેલ્યુએશન રિપોર્ટમાં દર્શાવ્યા મુજબના સોનાનાં દાગીના થાલમાં લઈને તેની કુલ કિંમત રૂ. <strong>${valuationAmt.toLocaleString("en-IN")}/-</strong> ના <strong>${ltv}%</strong> ટકા લેખે ધિરાણની રકમ રૂ. <strong>${sanctionedAmt.toLocaleString("en-IN")}/-</strong> અંકે રૂપિયા <strong>${amountInWords} પૂરા</strong> નો બેંકના સોનાના દાગીના સામે ધિરાણના નિયમાનુસાર ચુકાદો કરવાની મંજુરી આપવામાં આવે છે. આજરોજ ઉપરોક્ત દાગીનાનું સીલબંધ પેકેટ અરજદાર પાસેથી સંભાળી લૉકરમાં મુકેલ છે.
                 </p>
-            </div>
 
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:14px; padding-bottom:4px;">
-                <div style="text-align:center; width:42%;">
-                    <div style="display:inline-flex; align-items:flex-end; justify-content:center; gap:4px; margin-bottom:4px;">
-                        <span style="font-weight:bold; font-size:13px;">X</span>
-                        <span style="display:inline-block; width:160px; border-bottom:1.8px solid #000000;"></span>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:6px; padding-bottom:4px;">
+                    <div style="text-align:center; width:42%;">
+                        <div style="display:inline-flex; align-items:flex-end; justify-content:center; gap:4px; margin-bottom:4px;">
+                            <span style="font-weight:bold; font-size:13px;">X</span>
+                            <span style="display:inline-block; width:160px; border-bottom:1.8px solid #000000;"></span>
+                        </div>
+                        <div style="font-weight:900; font-size:12px;">Bank Officer</div>
                     </div>
-                    <div style="font-weight:900; font-size:12px;">Bank Officer</div>
-                </div>
-                <div style="text-align:center; width:42%;">
-                    <div style="display:inline-flex; align-items:flex-end; justify-content:center; gap:4px; margin-bottom:4px;">
-                        <span style="font-weight:bold; font-size:13px;">X</span>
-                        <span style="display:inline-block; width:160px; border-bottom:1.8px solid #000000;"></span>
+                    <div style="text-align:center; width:42%;">
+                        <div style="display:inline-flex; align-items:flex-end; justify-content:center; gap:4px; margin-bottom:4px;">
+                            <span style="font-weight:bold; font-size:13px;">X</span>
+                            <span style="display:inline-block; width:160px; border-bottom:1.8px solid #000000;"></span>
+                        </div>
+                        <div style="font-weight:900; font-size:12px;">Branch Manager</div>
                     </div>
-                    <div style="font-weight:900; font-size:12px;">Branch Manager</div>
                 </div>
             </div>
         </div>
@@ -11481,11 +11483,12 @@ function generatePage2ValuationReportHTML(loan, ltv, isPageBreak = true) {
                             <td colspan="2" style="border:1px solid #000; padding:4px 4px; text-align:right;">કુલ સરવાળો :</td>
                             <td style="border:1px solid #000; padding:4px 2px;"><strong>${totalQty}</strong></td>
                             <td style="border:1px solid #000; padding:4px 2px;">${normGrossGm}</td>
+                            <td style="border:1px solid #000; padding:4px 2px;"><strong>${normGrossMg}</strong></td>
                             <td style="border:1px solid #000; padding:4px 2px;"><strong>${normNetGm}</strong></td>
                             <td style="border:1px solid #000; padding:4px 2px;"><strong>${normNetMg}</strong></td>
                             <td style="border:1px solid #000; padding:4px 2px;">-</td>
                             <td style="border:1px solid #000; padding:4px 2px;"><strong>${totalFineGoldGm.toFixed(3)}</strong></td>
-                            <td style="border:1px solid #000; padding:4px 4px; text-align:right;"><strong>₹ ${(totalVal || loan.valuationAmount || 0).toLocaleString("en-IN")}</strong></td>
+                            <td style="border:1px solid #000; padding:4px 4px; text-align:right;"><strong>₹ ${Math.round(totalVal > 0 ? totalVal : (parseFloat(loan.valuationAmount) || 0)).toLocaleString("en-IN")}</strong></td>
                         </tr>
                     </tbody>
                 </table>
@@ -11521,7 +11524,7 @@ function generatePage2ValuationReportHTML(loan, ltv, isPageBreak = true) {
         </div>
 
         <!-- BOTTOM SECTION: DEMAND PROMISSORY NOTE -->
-        <div style="display:flex; flex-direction:column; justify-content:space-between; flex:0.65; border-top:1.8px solid #000000; padding-top:8px;">
+        <div style="display:flex; flex-direction:column; flex:0.65; border-top:1.8px solid #000000; padding-top:8px;">
             <div>
                 <div style="display:flex; align-items:center; width:100%; margin:2px 0 6px 0;">
                     <div style="flex:1; border-top:1.5px solid #000000; height:2px;"></div>
@@ -11536,7 +11539,7 @@ function generatePage2ValuationReportHTML(loan, ltv, isPageBreak = true) {
                 </p>
             </div>
 
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:8px; font-size:11.5px; padding-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:4px; font-size:11.5px; padding-bottom:4px;">
                 <div style="line-height:1.45;">
                     તારીખ :- <strong>${formatDateDMY(loan.date)}</strong><br>
                     સ્થળ : <strong>${branchInfo.cleanGuj}</strong>
@@ -11742,7 +11745,10 @@ function generatePage3ReceiptsHTML(loan, isPageBreak = true) {
             </div>
 
             <!-- Signatures -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:8px; font-size:11px;">
+            <div style="margin-top:6px; font-size:11px; font-weight:800; line-height:1.4; margin-bottom:6px;">
+                <div>સ્થળ : <strong>${branchInfo.cleanGuj}</strong> &nbsp;|&nbsp; તારીખ :- <strong>${formatDateDMY(loan.date)}</strong></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; font-size:11px;">
                 <div style="text-align:center; width:31%;">
                     <div style="height:28px;"></div>
                     <span style="display:inline-block; width:140px; border-bottom:1.6px solid #000000; margin-bottom:3px;"></span>
@@ -11764,10 +11770,6 @@ function generatePage3ReceiptsHTML(loan, isPageBreak = true) {
                     </div>
                 </div>
             </div>
-
-            <div style="margin-top:4px; font-size:11px; font-weight:800; line-height:1.4;">
-                <div>સ્થળ : <strong>${branchInfo.cleanGuj}</strong> &nbsp;|&nbsp; તારીખ :- <strong>${formatDateDMY(loan.date)}</strong></div>
-            </div>
         </div>
 
         <!-- BOTTOM SECTION: RETURN RECEIPT & RULES -->
@@ -11781,9 +11783,12 @@ function generatePage3ReceiptsHTML(loan, isPageBreak = true) {
                     <div style="flex:1; border-top:1.5px solid #000000; height:2px;"></div>
                 </div>
 
-                <div style="font-size:11px; margin-bottom:3px; line-height:1.4;">
-                    પ્રતિ, મેનેજરશ્રી, ધી જૂનાગઢ કોમ. કો-ઓપ. બેંક લી. <strong>${branchInfo.branchTitleGuj}</strong>
+                <div style="font-size:11px; line-height:1.6;">
+                    પ્રતિ, મેનેજર શ્રી,<br>
+                    ધી જૂનાગઢ કોમ. કો-ઓપ. બેંક લી.,<br>
+                    <strong>${branchInfo.branchTitleGuj}</strong>
                 </div>
+                <div style="margin-bottom:18px;"></div>
 
                 <p style="text-align:justify; margin:2px 0 4px 0; font-size:11px; line-height:1.45;">
                     ઉપરોક્ત વિગતે મેં બેંકને ગીરો આપેલ સોનાના દાગીના અસલ સ્થિતિમાં પરત મળ્યાં છે તે બદલ હું આ પહોંચમાં મારી સહી કરી આપું છું.
