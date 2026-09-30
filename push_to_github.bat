@@ -3,15 +3,15 @@ echo ===================================================
 echo   Pushing JCCB Gold Loan Portal Code to GitHub
 echo ===================================================
 echo.
-cd /d "C:\Users\RJP079\.gemini\antigravity\scratch\gold-loan-system"
+cd /d "%~dp0"
 
 echo 1. Initializing Git repository...
 git init
 
 echo.
-echo 2. Setting remote origin to https://github.com/rahulpopat80/JCOMGOLDENTRY.git...
+echo 2. Setting remote origin to https://github.com/tilakpopat4/temp-LMC.git...
 git remote remove origin 2>nul
-git remote add origin https://github.com/rahulpopat80/JCOMGOLDENTRY.git
+git remote add origin https://github.com/tilakpopat4/temp-LMC.git
 
 echo.
 echo 3. Adding files to commit...

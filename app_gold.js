@@ -205,7 +205,8 @@ const DEFAULT_VALUERS = [
     { id: "V12", name: "KISHORBHAI NAROTTAMDAS MEVACHA", phone: "9426860887", address: "SARDARGADH PARA, SHERI NO-1, POLICE STATION GROUND, MANAVADAR", savingsAc: "007131800000004", branch: "07", active: true },
     { id: "V13", name: "MITESHBHAI HARILAL SIMEJIYA", phone: "9427929160", address: "GANDHI CHOWK, MAIN ROAD, MANAVADAR", savingsAc: "007131800001582", branch: "07", active: true },
     { id: "V14", name: "ANILBHAI NAROTTAMBHAI GHORDA", phone: "9824845046", address: "FLAT NO.401, RAGHUVIR PALACE APPARTMENT, SERI NO 7-A/18, MILPARA, BHAKTI NAGAR, RAJKOT", savingsAc: "017131800000041", branch: "17", active: true },
-    { id: "V15", name: "RAJESHBHAI SONI", phone: "9825443106", address: "SECTOR-21, GANDHINAGAR", savingsAc: "1111111111111111", branch: "08", active: true }
+    { id: "V15", name: "RAJESHBHAI SONI", phone: "9825443106", address: "SECTOR-21, GANDHINAGAR", savingsAc: "1111111111111111", branch: "08", active: true },
+    { id: "V16", name: "HARESH MOHAN SATIKUVAR", phone: "9016415656", address: "MAIN BAJAR MOCHI SHERI MENDERDA 362260", savingsAc: "010131800000788", branch: "ALL", active: true }
 ];
 
 // Default Dynamic Bank Rules (Editable via HO Rules Master)
@@ -609,6 +610,13 @@ function loadState() {
             }
             const delValIds = Array.isArray(parsed.deletedValuerIds) ? parsed.deletedValuerIds : [];
             let vals = Array.isArray(parsed.valuers) && parsed.valuers.length > 0 ? parsed.valuers : (DEFAULT_VALUERS ? JSON.parse(JSON.stringify(DEFAULT_VALUERS)) : []);
+            (DEFAULT_VALUERS || []).forEach(dv => {
+                if (dv && !delValIds.includes(dv.id) && !delValIds.includes(dv.name)) {
+                    if (!vals.some(v => v && (v.id === dv.id || (v.name && v.name.trim().toUpperCase() === dv.name.trim().toUpperCase())))) {
+                        vals.push(JSON.parse(JSON.stringify(dv)));
+                    }
+                }
+            });
             vals = vals.filter(v => v && !delValIds.includes(v.id) && !delValIds.includes(v.name));
             let branches = parsed.branches;
             if (!Array.isArray(branches) || branches.length === 0) {
