@@ -206,7 +206,8 @@ const DEFAULT_VALUERS = [
     { id: "V13", name: "MITESHBHAI HARILAL SIMEJIYA", phone: "9427929160", address: "GANDHI CHOWK, MAIN ROAD, MANAVADAR", savingsAc: "007131800001582", branch: "07", active: true },
     { id: "V14", name: "ANILBHAI NAROTTAMBHAI GHORDA", phone: "9824845046", address: "FLAT NO.401, RAGHUVIR PALACE APPARTMENT, SERI NO 7-A/18, MILPARA, BHAKTI NAGAR, RAJKOT", savingsAc: "017131800000041", branch: "17", active: true },
     { id: "V15", name: "RAJESHBHAI SONI", phone: "9825443106", address: "SECTOR-21, GANDHINAGAR", savingsAc: "1111111111111111", branch: "08", active: true },
-    { id: "V16", name: "HARESH MOHAN SATIKUVAR", phone: "9016415656", address: "MAIN BAJAR MOCHI SHERI MENDERDA 362260", savingsAc: "010131800000788", branch: "ALL", active: true }
+    { id: "V16", name: "HARESH MOHAN SATIKUVAR", phone: "9016415656", address: "MAIN BAJAR MOCHI SHERI MENDERDA 362260", savingsAc: "010131800000788", branch: "ALL", active: true },
+    { id: "V17", name: "KAMALBHAI NAVNEETLAL LODHIYA", nameGuj: "કમલભાઈ નવનીતલાલ લોઢીયા", phone: "9904120252", address: "302, RUDHRAKSH APPARTMENT, JUNAGADH", savingsAc: "001131800014861", branch: "01", active: true }
 ];
 
 // Default Dynamic Bank Rules (Editable via HO Rules Master)
@@ -3257,15 +3258,15 @@ function submitLoanEntry() {
             valuerName: valuerName,
             valuerName2: isAbove10L ? valuerName2 : "",
             valuerAc: (function() {
-                const v1Obj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName.toLowerCase());
+                const v1Obj = (state.valuers || []).find(v => (v.name && v.name.trim().toLowerCase() === valuerName.toLowerCase()) || (v.nameGuj && v.nameGuj.trim() === valuerName.trim()));
                 return (v1Obj && v1Obj.savingsAc) ? v1Obj.savingsAc.trim() : "";
             })(),
             valuerAc1: (function() {
-                const v1Obj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName.toLowerCase());
+                const v1Obj = (state.valuers || []).find(v => (v.name && v.name.trim().toLowerCase() === valuerName.toLowerCase()) || (v.nameGuj && v.nameGuj.trim() === valuerName.trim()));
                 return (v1Obj && v1Obj.savingsAc) ? v1Obj.savingsAc.trim() : "";
             })(),
             valuerAc2: isAbove10L ? (function() {
-                const v2Obj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName2.toLowerCase());
+                const v2Obj = (state.valuers || []).find(v => (v.name && v.name.trim().toLowerCase() === valuerName2.toLowerCase()) || (v.nameGuj && v.nameGuj.trim() === valuerName2.trim()));
                 return (v2Obj && v2Obj.savingsAc) ? v2Obj.savingsAc.trim() : "";
             })() : "",
             isCompulsoryOD: isCompulsoryOD,
@@ -4528,7 +4529,7 @@ function getDailyAggregatedVouchersData(date, branchFilter = "") {
 
     Object.keys(valuerMap).forEach(vName => {
         const vData = valuerMap[vName];
-        const valObj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === vName.toLowerCase());
+        const valObj = (state.valuers || []).find(v => (v.name && v.name.trim().toLowerCase() === vName.toLowerCase()) || (v.nameGuj && v.nameGuj.trim() === vName.trim()));
         const savingsAc = vData.ac || ((valObj && valObj.savingsAc) ? valObj.savingsAc : "");
         const valAc = savingsAc ? `A/C: ${savingsAc}` : "VALUER A/C";
         const accStr = vData.accs.length <= 4 ? vData.accs.join(", ") : (vData.accs.slice(0, 3).join(", ") + ` વગેરે કુલ ${vData.accs.length}`);
@@ -12100,7 +12101,7 @@ function getLoanExpenseVouchersList(loan) {
             const fee2 = parseFloat(loan.valuerFee2 || 1500);
 
             // Valuer 1
-            const valObj1 = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === vName1.trim().toLowerCase());
+            const valObj1 = (state.valuers || []).find(v => (v.name && v.name.trim().toLowerCase() === vName1.trim().toLowerCase()) || (v.nameGuj && v.nameGuj.trim() === vName1.trim()));
             const savingsAc1 = loan.valuerAc1 || loan.valuerAc || (valObj1 && valObj1.savingsAc ? valObj1.savingsAc : "");
             const valAc1 = savingsAc1 ? `A/C: ${savingsAc1}` : "VALUER A/C";
             vouchers.push({
@@ -12113,7 +12114,7 @@ function getLoanExpenseVouchersList(loan) {
             });
 
             // Valuer 2
-            const valObj2 = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === vName2.trim().toLowerCase());
+            const valObj2 = (state.valuers || []).find(v => (v.name && v.name.trim().toLowerCase() === vName2.trim().toLowerCase()) || (v.nameGuj && v.nameGuj.trim() === vName2.trim()));
             const savingsAc2 = loan.valuerAc2 || (valObj2 && valObj2.savingsAc ? valObj2.savingsAc : "");
             const valAc2 = savingsAc2 ? `A/C: ${savingsAc2}` : "VALUER A/C";
             vouchers.push({
@@ -12125,7 +12126,7 @@ function getLoanExpenseVouchersList(loan) {
                 narration: `આજ રોજ સોના ધિરાણના ખુલેલ ખાતાના સોનાના દાગીના વેલ્યુએશન ફી પેટે જમા (ખાતા નં. ${accFormatted} - ${borrowerName})${savingsAc2 ? ' [બચત ખાતા નં. ' + savingsAc2 : ''}`
             });
         } else {
-            const valObj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName.trim().toLowerCase());
+            const valObj = (state.valuers || []).find(v => (v.name && v.name.trim().toLowerCase() === valuerName.trim().toLowerCase()) || (v.nameGuj && v.nameGuj.trim() === valuerName.trim()));
             const savingsAc = loan.valuerAc || loan.valuerAc1 || (valObj && valObj.savingsAc ? valObj.savingsAc : "");
             const valAc = savingsAc ? `A/C: ${savingsAc}` : "VALUER A/C";
             vouchers.push({
