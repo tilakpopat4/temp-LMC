@@ -227,7 +227,7 @@ const DEFAULT_RULES = {
         ratePercent: 0.25,
         slab4MaxCap: 1000,
         slab5MaxCap: 1500,
-        slab6MaxCap: 2000
+        slab6MaxCap: 3000
     },
     insurance: {
         threshold: 200000,
@@ -2143,6 +2143,24 @@ function initLoanEntryForm() {
         });
     }
 
+    // Valuer 1 and Valuer 2 validation (must be different valuers)
+    const valuerSelect1 = document.getElementById("valuer-select");
+    const valuerSelect2 = document.getElementById("valuer-select-2");
+    if (valuerSelect1 && valuerSelect2) {
+        valuerSelect2.addEventListener("change", () => {
+            if (valuerSelect2.value && valuerSelect1.value && valuerSelect2.value.trim().toLowerCase() === valuerSelect1.value.trim().toLowerCase()) {
+                alert("વેલ્યુઅર ૧ અને વેલ્યુઅર ૨ બંને અલગ અલગ હોવા જોઈએ. કૃપા કરીને બીજો અલગ વેલ્યુઅર પસંદ કરો.");
+                valuerSelect2.value = "";
+            }
+        });
+        valuerSelect1.addEventListener("change", () => {
+            if (valuerSelect1.value && valuerSelect2.value && valuerSelect1.value.trim().toLowerCase() === valuerSelect2.value.trim().toLowerCase()) {
+                alert("વેલ્યુઅર ૧ અને વેલ્યુઅર ૨ બંને અલગ અલગ હોવા જોઈએ. કૃપા કરીને બીજો અલગ વેલ્યુઅર પસંદ કરો.");
+                valuerSelect1.value = "";
+            }
+        });
+    }
+
     const compulsoryOdCheckbox = document.getElementById("loan-compulsory-od");
     if (compulsoryOdCheckbox) {
         compulsoryOdCheckbox.addEventListener("change", () => {
@@ -2298,6 +2316,27 @@ function updateLoanAmountLogic() {
     }
 
     const amt = parseFloat(amtInput ? amtInput.value || 0 : 0);
+
+    // Valuer 2 requirement check for loans > ₹10,00,000 (10 Lakh)
+    const valuer2Row = document.getElementById("valuer-2-row");
+    const valuer1Label = document.getElementById("valuer-select-label");
+    const valuer2Select = document.getElementById("valuer-select-2");
+    if (valuer2Row) {
+        if (amt > 1000000) {
+            valuer2Row.style.display = "flex";
+            if (valuer1Label) valuer1Label.innerHTML = 'Soni Valuer 1 <span style="font-size:11px; color:#1e293b;">(સોની વેલ્યુઅર ૧)</span>';
+            if (valuer2Select) valuer2Select.required = true;
+        } else {
+            valuer2Row.style.display = "none";
+            if (valuer1Label) valuer1Label.innerHTML = 'Soni Valuer';
+            if (valuer2Select) {
+                valuer2Select.required = false;
+                if (!isEditingExistingLoan) {
+                    valuer2Select.value = "";
+                }
+            }
+        }
+    }
 
     if (wordsInput) {
         wordsInput.value = amt > 0 ? numberToGujaratiWords(amt) + " રૂપિયા પૂરા" : "";
@@ -2761,7 +2800,10 @@ function calculateAllCharges() {
     let valuationFee = 0;
     const vRules = rules.valuation || DEFAULT_RULES.valuation;
     if (loanAmt > 0) {
-        if (loanAmt <= parseFloat(vRules.slab1Max ?? 25000)) {
+        if (loanAmt > 1000000) {
+            // > 10 Lakh: Two valuers @ ₹1,500 each = ₹3,000 fixed
+            valuationFee = 3000;
+        } else if (loanAmt <= parseFloat(vRules.slab1Max ?? 25000)) {
             valuationFee = parseFloat(vRules.slab1Amt ?? 100);
         } else if (loanAmt <= parseFloat(vRules.slab2Max ?? 50000)) {
             valuationFee = parseFloat(vRules.slab2Amt ?? 150);
@@ -2770,12 +2812,20 @@ function calculateAllCharges() {
         } else if (loanAmt <= 500000) {
             const raw = Math.round(loanAmt * (parseFloat(vRules.ratePercent ?? 0.25) / 100));
             valuationFee = Math.min(parseFloat(vRules.slab4MaxCap ?? 1000), raw);
-        } else if (loanAmt <= 1000000) {
-            const raw = Math.round(loanAmt * (parseFloat(vRules.ratePercent ?? 0.25) / 100));
-            valuationFee = Math.min(parseFloat(vRules.slab5MaxCap ?? 1500), raw);
         } else {
             const raw = Math.round(loanAmt * (parseFloat(vRules.ratePercent ?? 0.25) / 100));
-            valuationFee = Math.min(parseFloat(vRules.slab6MaxCap ?? 2000), raw);
+            valuationFee = Math.min(parseFloat(vRules.slab5MaxCap ?? 1500), raw);
+        }
+    }
+
+    const valLabel = document.getElementById("label-charge-valuation");
+    if (valLabel) {
+        if (loanAmt > 1000000) {
+            valLabel.innerHTML = 'Valuation <span style="font-size:10px; color:#15803d; font-weight:700;">(1500+1500)</span>';
+            valLabel.title = "બે વેલ્યુઅર માટે ₹૧,૫૦૦ + ₹૧,૫૦૦ = ₹૩,૦૦૦";
+        } else {
+            valLabel.innerHTML = 'Valuation';
+            valLabel.title = "";
         }
     }
 
@@ -3062,6 +3112,23 @@ function submitLoanEntry() {
             return;
         }
 
+        const isAbove10L = (loanAmt > 1000000);
+        const valuer2Input = document.getElementById("valuer-select-2");
+        let valuerName2 = "";
+        if (isAbove10L) {
+            valuerName2 = valuer2Input ? valuer2Input.value.trim() : "";
+            if (!valuerName2) {
+                alert("દસ લાખ કરતા વધારે લોન હોવાથી બીજા સોની વેલ્યુઅર (Valuer 2) પસંદ કરવા ફરજિયાત છે.");
+                if (valuer2Input) valuer2Input.focus();
+                return;
+            }
+            if (valuerName.toLowerCase() === valuerName2.toLowerCase()) {
+                alert("વેલ્યુઅર ૧ અને વેલ્યુઅર ૨ બંને અલગ અલગ હોવા જોઈએ. કૃપા કરીને બીજો અલગ વેલ્યુઅર પસંદ કરો.");
+                if (valuer2Input) valuer2Input.focus();
+                return;
+            }
+        }
+
         const existingLoanData = (isEditingExistingLoan && currentEditingLoanId) ? (state.loans || []).find(l => l.id === currentEditingLoanId) : null;
 
         const isHO = isHeadOfficeSession();
@@ -3188,6 +3255,19 @@ function submitLoanEntry() {
             nomineeName: nomineeName,
             nomineeRelation: nomineeRelation,
             valuerName: valuerName,
+            valuerName2: isAbove10L ? valuerName2 : "",
+            valuerAc: (function() {
+                const v1Obj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName.toLowerCase());
+                return (v1Obj && v1Obj.savingsAc) ? v1Obj.savingsAc.trim() : "";
+            })(),
+            valuerAc1: (function() {
+                const v1Obj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName.toLowerCase());
+                return (v1Obj && v1Obj.savingsAc) ? v1Obj.savingsAc.trim() : "";
+            })(),
+            valuerAc2: isAbove10L ? (function() {
+                const v2Obj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName2.toLowerCase());
+                return (v2Obj && v2Obj.savingsAc) ? v2Obj.savingsAc.trim() : "";
+            })() : "",
             isCompulsoryOD: isCompulsoryOD,
             loanType: loanTypeCode,
             interestRate: interestRateVal,
@@ -3203,6 +3283,8 @@ function submitLoanEntry() {
             shareB: parseFloat(document.getElementById("charge-share-b") ? document.getElementById("charge-share-b").value || 0 : 0),
             memberFee: parseFloat(document.getElementById("charge-member-fee") ? document.getElementById("charge-member-fee").value || 0 : 0),
             valuerFee: parseFloat(document.getElementById("charge-valuation") ? document.getElementById("charge-valuation").value || 0 : 0),
+            valuerFee1: isAbove10L ? 1500 : parseFloat(document.getElementById("charge-valuation") ? document.getElementById("charge-valuation").value || 0 : 0),
+            valuerFee2: isAbove10L ? 1500 : 0,
             stampDuty: parseFloat(document.getElementById("charge-stamp") ? document.getElementById("charge-stamp").value || 0 : 0),
             serviceCharge: parseFloat(document.getElementById("charge-service") ? document.getElementById("charge-service").value || 0 : 0),
             docCharges: parseFloat(document.getElementById("charge-document") ? document.getElementById("charge-document").value || 0 : 0),
@@ -3406,6 +3488,17 @@ function resetLoanEntryForm() {
     if (isMemberSelect) isMemberSelect.value = "No";
     const memberNoGroup = document.getElementById("member-no-group");
     if (memberNoGroup) memberNoGroup.style.display = "none";
+
+    const valuerSelect2 = document.getElementById("valuer-select-2");
+    if (valuerSelect2) {
+        valuerSelect2.value = "";
+        valuerSelect2.required = false;
+    }
+    const valuer2Row = document.getElementById("valuer-2-row");
+    if (valuer2Row) valuer2Row.style.display = "none";
+    const valuer1Label = document.getElementById("valuer-select-label");
+    if (valuer1Label) valuer1Label.innerHTML = 'Soni Valuer';
+
     // Re-lock charge fields (in case it was a Staff entry)
     if (typeof toggleStaffChargeMode === "function") toggleStaffChargeMode(false);
 
@@ -4038,6 +4131,25 @@ function editLoanRecord(id) {
         }
     }
     document.getElementById("valuer-select").value = loan.valuerName || "";
+    const valuer2Row = document.getElementById("valuer-2-row");
+    const valuer2Select = document.getElementById("valuer-select-2");
+    const valuer1Label = document.getElementById("valuer-select-label");
+    const isAbove10L = parseFloat(loan.sanctionedAmount || 0) > 1000000 || !!loan.valuerName2;
+    if (isAbove10L) {
+        if (valuer2Row) valuer2Row.style.display = "flex";
+        if (valuer1Label) valuer1Label.innerHTML = 'Soni Valuer 1 <span style="font-size:11px; color:#1e293b;">(સોની વેલ્યુઅર ૧)</span>';
+        if (valuer2Select) {
+            valuer2Select.value = loan.valuerName2 || "";
+            valuer2Select.required = true;
+        }
+    } else {
+        if (valuer2Row) valuer2Row.style.display = "none";
+        if (valuer1Label) valuer1Label.innerHTML = 'Soni Valuer';
+        if (valuer2Select) {
+            valuer2Select.value = "";
+            valuer2Select.required = false;
+        }
+    }
     document.getElementById("loan-amount").value = loan.sanctionedAmount || "";
 
     const acInp = document.getElementById("loan-ac-no");
@@ -4375,17 +4487,41 @@ function getDailyAggregatedVouchersData(date, branchFilter = "") {
     // 2. Valuer Fees grouped by Valuer
     const valuerMap = {};
     loans.forEach(loan => {
-        const vFee = parseFloat(loan.valuerFee || 0);
-        if (vFee > 0) {
-            const vName = (loan.valuerName || "Approved Valuer").trim();
-            if (!valuerMap[vName]) {
-                valuerMap[vName] = { total: 0, count: 0, accs: [] };
-            }
-            valuerMap[vName].total += vFee;
-            valuerMap[vName].count++;
-            const accFmt = formatLoanAccountNo(loan.accountNo, loan.branchCode, loan.loanType);
-            if (accFmt && !valuerMap[vName].accs.includes(accFmt)) {
-                valuerMap[vName].accs.push(accFmt);
+        const hasTwoValuers = !!(loan.valuerName2 && loan.valuerName2.trim()) || (parseFloat(loan.sanctionedAmount || loan.loanAmount || 0) > 1000000 && loan.valuerName2);
+        if (hasTwoValuers) {
+            const vName1 = (loan.valuerName || "Approved Valuer 1").trim();
+            const vName2 = (loan.valuerName2).trim();
+            const fee1 = parseFloat(loan.valuerFee1 || 1500);
+            const fee2 = parseFloat(loan.valuerFee2 || 1500);
+
+            [ { name: vName1, fee: fee1, ac: loan.valuerAc1 }, { name: vName2, fee: fee2, ac: loan.valuerAc2 } ].forEach(vItem => {
+                if (vItem.fee > 0 && vItem.name) {
+                    if (!valuerMap[vItem.name]) {
+                        valuerMap[vItem.name] = { total: 0, count: 0, accs: [], ac: vItem.ac || "" };
+                    }
+                    valuerMap[vItem.name].total += vItem.fee;
+                    valuerMap[vItem.name].count++;
+                    if (vItem.ac && !valuerMap[vItem.name].ac) valuerMap[vItem.name].ac = vItem.ac;
+                    const accFmt = formatLoanAccountNo(loan.accountNo, loan.branchCode, loan.loanType);
+                    if (accFmt && !valuerMap[vItem.name].accs.includes(accFmt)) {
+                        valuerMap[vItem.name].accs.push(accFmt);
+                    }
+                }
+            });
+        } else {
+            const vFee = parseFloat(loan.valuerFee || 0);
+            if (vFee > 0) {
+                const vName = (loan.valuerName || "Approved Valuer").trim();
+                if (!valuerMap[vName]) {
+                    valuerMap[vName] = { total: 0, count: 0, accs: [], ac: loan.valuerAc || "" };
+                }
+                valuerMap[vName].total += vFee;
+                valuerMap[vName].count++;
+                if (loan.valuerAc && !valuerMap[vName].ac) valuerMap[vName].ac = loan.valuerAc;
+                const accFmt = formatLoanAccountNo(loan.accountNo, loan.branchCode, loan.loanType);
+                if (accFmt && !valuerMap[vName].accs.includes(accFmt)) {
+                    valuerMap[vName].accs.push(accFmt);
+                }
             }
         }
     });
@@ -4393,7 +4529,8 @@ function getDailyAggregatedVouchersData(date, branchFilter = "") {
     Object.keys(valuerMap).forEach(vName => {
         const vData = valuerMap[vName];
         const valObj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === vName.toLowerCase());
-        const valAc = (valObj && valObj.savingsAc) ? `A/C: ${valObj.savingsAc}` : "VALUER A/C";
+        const savingsAc = vData.ac || ((valObj && valObj.savingsAc) ? valObj.savingsAc : "");
+        const valAc = savingsAc ? `A/C: ${savingsAc}` : "VALUER A/C";
         const accStr = vData.accs.length <= 4 ? vData.accs.join(", ") : (vData.accs.slice(0, 3).join(", ") + ` વગેરે કુલ ${vData.accs.length}`);
 
         aggregatedList.push({
@@ -4403,7 +4540,8 @@ function getDailyAggregatedVouchersData(date, branchFilter = "") {
             amount: Math.round(vData.total * 100) / 100,
             count: vData.count,
             accounts: vData.accs,
-            narration: `આજ રોજ સોના ધિરાણના ખુલેલ ${vData.count > 1 ? 'કુલ ' + vData.count + ' ખાતાઓના' : 'ખાતા નં. ' + accStr + ' ના'} સોનાના દાગીના વેલ્યુએશન ફી પેટે જમા${vData.count > 1 && accStr ? ' (ખાતા નં. ' + accStr + ')' : ''}`
+            savingsAc: savingsAc,
+            narration: `આજ રોજ સોના ધિરાણના ખુલેલ ${vData.count > 1 ? 'કુલ ' + vData.count + ' ખાતાઓના' : 'ખાતા નં. ' + accStr + ' ના'} સોનાના દાગીના વેલ્યુએશન ફી પેટે જમા${savingsAc ? ' [બચત ખાતા નં. ' + savingsAc + ']' : ''}${vData.count > 1 && accStr ? ' (ખાતા નં. ' + accStr + ')' : ''}`
         });
     });
 
@@ -4718,7 +4856,10 @@ function getFilteredReportLoans() {
         list = list.filter(l => (l.loanType || "").includes(productVal));
     }
     if (valuerVal) {
-        list = list.filter(l => (l.valuerName || "").trim().toLowerCase() === valuerVal.trim().toLowerCase());
+        list = list.filter(l => 
+            (l.valuerName || "").trim().toLowerCase() === valuerVal.trim().toLowerCase() ||
+            (l.valuerName2 || "").trim().toLowerCase() === valuerVal.trim().toLowerCase()
+        );
     }
     if (searchVal) {
         list = list.filter(l => {
@@ -4897,7 +5038,7 @@ function renderReportsTable() {
             <td style="text-align:right; font-weight:800; color:#0f172a;">₹ ${sancAmt.toLocaleString("en-IN")}</td>
             <td style="text-align:right; color:#b91c1c; font-weight:600;">₹ ${deductions.toLocaleString("en-IN")}</td>
             <td style="text-align:right; font-weight:800; color:#15803d;">₹ ${netPaid.toLocaleString("en-IN")}</td>
-            <td style="font-size:11px; white-space:nowrap;">${loan.valuerName || "-"}</td>
+            <td style="font-size:11px; white-space:nowrap;">${loan.valuerName || "-"}${loan.valuerName2 ? `<br><span style="color:#15803d; font-weight:700; font-size:10px;">+ ${loan.valuerName2}</span>` : ''}</td>
             <td style="text-align:center; white-space:nowrap;">
                 <div style="display:flex; gap:4px; justify-content:center;">
                     <button class="btn btn-sm btn-gold rep-print-doc-btn" data-id="${loan.id}" title="Loan Documents" style="padding:3px 7px; font-size:11px;">
@@ -5264,7 +5405,7 @@ async function printReportPDF() {
                     <td style="text-align:right; border:1px solid #94a3b8; font-weight:800; padding: 4px 4px; font-variant-numeric: tabular-nums; white-space:nowrap; width:20mm;">${sanc.toLocaleString("en-IN")}</td>
                     <td style="text-align:right; border:1px solid #94a3b8; padding: 4px 4px; font-variant-numeric: tabular-nums; white-space:nowrap; width:15mm;">${totDed.toLocaleString("en-IN")}</td>
                     <td style="text-align:right; border:1px solid #94a3b8; font-weight:800; color:#0f1c3f; padding: 4px 4px; font-variant-numeric: tabular-nums; white-space:nowrap; width:20mm;">${netPaid.toLocaleString("en-IN")}</td>
-                    <td style="font-size:9px; padding: 4px 4px; word-break:break-word; border:1px solid #94a3b8; width:27mm; line-height:1.25;">${l.valuerName || "-"}</td>
+                    <td style="font-size:9px; padding: 4px 4px; word-break:break-word; border:1px solid #94a3b8; width:27mm; line-height:1.25;">${l.valuerName || "-"}${l.valuerName2 ? ' / ' + l.valuerName2 : ''}</td>
                 </tr>
             `;
         });
@@ -5436,7 +5577,7 @@ function initRulesMaster() {
                     ratePercent: parseFloat(document.getElementById("rule-val-rate").value || 0.25),
                     slab4MaxCap: parseFloat(document.getElementById("rule-val-slab4-cap").value || 1000),
                     slab5MaxCap: parseFloat(document.getElementById("rule-val-slab5-cap").value || 1500),
-                    slab6MaxCap: parseFloat(document.getElementById("rule-val-slab6-cap").value || 2000)
+                    slab6MaxCap: parseFloat(document.getElementById("rule-val-slab6-cap").value || 3000)
                 },
                 insurance: {
                     threshold: 200000,
@@ -5538,7 +5679,7 @@ function renderRulesMaster() {
     setVal("rule-val-slab3", rules.valuation?.slab3Amt ?? 250);
     setVal("rule-val-slab4-cap", rules.valuation?.slab4MaxCap ?? 1000);
     setVal("rule-val-slab5-cap", rules.valuation?.slab5MaxCap ?? 1500);
-    setVal("rule-val-slab6-cap", rules.valuation?.slab6MaxCap ?? 2000);
+    setVal("rule-val-slab6-cap", rules.valuation?.slab6MaxCap ?? 3000);
     setVal("rule-val-rate", rules.valuation?.ratePercent ?? 0.25);
 
     // 3. Doc & Insurance
@@ -6190,6 +6331,19 @@ function renderValuers() {
             opt.textContent = `${v.name} (${v.phone || "-"})`;
             if (v.name === curVal) opt.selected = true;
             selectValuer.appendChild(opt);
+        });
+    }
+
+    const selectValuer2 = document.getElementById("valuer-select-2");
+    if (selectValuer2) {
+        const curVal2 = selectValuer2.value;
+        selectValuer2.innerHTML = '<option value="">-- Select Second Valuer (બીજા વેલ્યુઅર) --</option>';
+        state.valuers.forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v.name;
+            opt.textContent = `${v.name} (${v.phone || "-"})`;
+            if (v.name === curVal2) opt.selected = true;
+            selectValuer2.appendChild(opt);
         });
     }
 
@@ -6907,7 +7061,7 @@ function initRulesMaster() {
                     ratePercent: parseFloat(document.getElementById("rule-val-rate")?.value || 0.25),
                     slab4MaxCap: parseFloat(document.getElementById("rule-val-slab4-cap")?.value || 1000),
                     slab5MaxCap: parseFloat(document.getElementById("rule-val-slab5-cap")?.value || 1500),
-                    slab6MaxCap: parseFloat(document.getElementById("rule-val-slab6-cap")?.value || 2000)
+                    slab6MaxCap: parseFloat(document.getElementById("rule-val-slab6-cap")?.value || 3000)
                 },
                 insurance: {
                     threshold: 200000,
@@ -7127,7 +7281,7 @@ function renderRulesMaster() {
     if (document.getElementById("rule-val-slab4-cap")) document.getElementById("rule-val-slab4-cap").value = rules.valuation?.slab4MaxCap ?? 1000;
     if (document.getElementById("rule-val-slab5-cap")) document.getElementById("rule-val-slab5-cap").value = rules.valuation?.slab5MaxCap ?? 1500;
     if (document.getElementById("rule-val-rate")) document.getElementById("rule-val-rate").value = rules.valuation?.ratePercent ?? 0.25;
-    if (document.getElementById("rule-val-slab6-cap")) document.getElementById("rule-val-slab6-cap").value = rules.valuation?.slab6MaxCap ?? 2000;
+    if (document.getElementById("rule-val-slab6-cap")) document.getElementById("rule-val-slab6-cap").value = rules.valuation?.slab6MaxCap ?? 3000;
 
     // 3. Doc & Insurance
     if (document.getElementById("rule-doc-slab1")) document.getElementById("rule-doc-slab1").value = rules.docCharge?.slab1Amt ?? 50;
@@ -7765,6 +7919,11 @@ function exportCompleteBackupExcel() {
             "NomineeName": l.nomineeName || "",
             "NomineeRelation": l.nomineeRelation || "",
             "ValuerName": l.valuerName || "",
+            "ValuerName2": l.valuerName2 || "",
+            "ValuerAc1": l.valuerAc1 || l.valuerAc || "",
+            "ValuerAc2": l.valuerAc2 || "",
+            "ValuerFee1": l.valuerFee1 || 0,
+            "ValuerFee2": l.valuerFee2 || 0,
             "LoanType": l.loanType || "GW-3725",
             "InterestRate": l.interestRate || 11.50,
             "SanctionedAmount": l.sanctionedAmount || 0,
@@ -8690,6 +8849,11 @@ function generateExcelBlobPackage() {
         "NomineeName": l.nomineeName || "",
         "NomineeRelation": l.nomineeRelation || "",
         "ValuerName": l.valuerName || "",
+        "ValuerName2": l.valuerName2 || "",
+        "ValuerAc1": l.valuerAc1 || l.valuerAc || "",
+        "ValuerAc2": l.valuerAc2 || "",
+        "ValuerFee1": l.valuerFee1 || 0,
+        "ValuerFee2": l.valuerFee2 || 0,
         "LoanType": l.loanType || "GW-3725",
         "InterestRate": l.interestRate || 11.50,
         "SanctionedAmount": l.sanctionedAmount || 0,
@@ -9056,6 +9220,11 @@ async function importCompleteRestoreExcel(file) {
                         nomineeName: String(r["NomineeName"] || r["nomineeName"] || ""),
                         nomineeRelation: String(r["NomineeRelation"] || r["nomineeRelation"] || ""),
                         valuerName: String(r["ValuerName"] || r["valuerName"] || ""),
+                        valuerName2: String(r["ValuerName2"] || r["valuerName2"] || ""),
+                        valuerAc1: String(r["ValuerAc1"] || r["valuerAc1"] || r["ValuerAc"] || ""),
+                        valuerAc2: String(r["ValuerAc2"] || r["valuerAc2"] || ""),
+                        valuerFee1: parseFloat(r["ValuerFee1"] || r["valuerFee1"] || 0),
+                        valuerFee2: parseFloat(r["ValuerFee2"] || r["valuerFee2"] || 0),
                         loanType: String(r["LoanType"] || r["loanType"] || "GW-3725"),
                         interestRate: parseFloat(r["InterestRate"] || r["interestRate"] || 11.50),
                         sanctionedAmount: parseFloat(r["SanctionedAmount"] || r["sanctionedAmount"] || 0),
@@ -10332,7 +10501,7 @@ function generateSingleSanctionLetterCard(loan, copyTag, copyTitleGujarati) {
                     <td style="border-right: 1px solid #000; padding: 3.5px 5px; font-weight: 700; background: #f8fafc;">વ્યાજ દર (%):</td>
                     <td style="border-right: 1px solid #000; padding: 3.5px 5px; font-weight: 800;">${interestRate}% વાર્ષિક</td>
                     <td style="border-right: 1px solid #000; padding: 3.5px 5px; font-weight: 700; background: #f8fafc;">સોની વેલ્યુઅર:</td>
-                    <td style="padding: 3.5px 5px;">${loan.valuerName || "-"}</td>
+                    <td style="padding: 3.5px 5px;">${loan.valuerName || "-"}${loan.valuerName2 ? ' / ' + loan.valuerName2 : ''}</td>
                 </tr>
                 <tr>
                     <td style="border-right: 1px solid #000; padding: 3.5px 5px; font-weight: 700; background: #f8fafc;">સોના દાગીના વજન:</td>
@@ -11076,7 +11245,7 @@ function generatePage2ValuationReportHTML(loan, ltv, isPageBreak = true) {
                         <span style="display:inline-block; width:150px; border-bottom:1.6px solid #000000;"></span>
                     </div>
                     <div style="font-weight:900; font-size:11.5px;">વેલ્યુઅરની સહી (સિક્કા સાથે)</div>
-                    <div style="font-weight:700; font-size:10.5px;">(<strong>${loan.valuerName || "Approved Valuer"}</strong>)</div>
+                    <div style="font-weight:700; font-size:10px;">(<strong>${loan.valuerName2 ? `1. ${loan.valuerName} &nbsp;|&nbsp; 2. ${loan.valuerName2}` : (loan.valuerName || "Approved Valuer")}</strong>)</div>
                 </div>
                 <div style="text-align:center; min-width:180px;">
                     <div style="display:inline-flex; align-items:flex-end; justify-content:center; gap:4px; margin-bottom:3px; white-space:nowrap;">
@@ -11319,7 +11488,7 @@ function generatePage3ReceiptsHTML(loan, isPageBreak = true) {
                     <div style="height:28px;"></div>
                     <span style="display:inline-block; width:140px; border-bottom:1.6px solid #000000; margin-bottom:3px;"></span>
                     <div style="font-weight:900; font-size:11px; color:#000000;">સીલબંધ પેકેટ કરનાર (સિક્કો)</div>
-                    <div style="font-weight:700; font-size:10px; margin-top:1px;">(<strong>${loan.valuerName || "Approved Valuer"}</strong>)</div>
+                    <div style="font-weight:700; font-size:9.5px; margin-top:1px;">(<strong>${loan.valuerName2 ? `1. ${loan.valuerName} &nbsp;|&nbsp; 2. ${loan.valuerName2}` : (loan.valuerName || "Approved Valuer")}</strong>)</div>
                 </div>
                 <div style="text-align:center; width:31%;">
                     <div style="height:28px;"></div>
@@ -11498,7 +11667,7 @@ function generatePage4KFSHTML(loan, ltv, isPageBreak = false) {
                         <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Repayment Terms</td><td style="border:1.2px solid #000000; padding:5.2px 8px; line-height:1.25;">The principal amount is repayable in one lump sum on or before the due date. Interest shall be paid as per the sanctioned terms.</td></tr>
                         <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Due Date of Maturity</td><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:800;">${formatDateDMY(new Date(new Date().setFullYear(new Date().getFullYear() + 1)))}</td></tr>
                         <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Processing Charges</td><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:800;">₹ ${processingFee.toLocaleString("en-IN")}/-</td></tr>
-                        <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Appraiser Charges</td><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:800;">₹ ${valuerFee.toLocaleString("en-IN")}/-</td></tr>
+                        <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Appraiser Charges</td><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:800;">₹ ${valuerFee.toLocaleString("en-IN")}/-${loan.valuerName2 ? ' (₹1,500 + ₹1,500)' : ''}</td></tr>
                         <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Documentation Charges</td><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:800;">₹ ${stampDuty.toLocaleString("en-IN")}/-</td></tr>
                         <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Other Charges (if any)</td><td style="border:1.2px solid #000000; padding:5.2px 8px;">₹ ${Math.max(0, otherDeductions).toLocaleString("en-IN")}/-</td></tr>
                         <tr><td style="border:1.2px solid #000000; padding:5.2px 8px; font-weight:700;">Penal Charges (in case of default)</td><td style="border:1.2px solid #000000; padding:5.2px 8px; color:#b91c1c; font-weight:700;">2.00% p.a. on overdue amount for delayed period</td></tr>
@@ -11922,15 +12091,52 @@ function getLoanExpenseVouchersList(loan) {
 
     // 10. Valuer Fee (Valuer Account)
     const valuerFee = parseFloat(loan.valuerFee || 0);
+    const hasTwoValuers = !!(loan.valuerName2 && loan.valuerName2.trim()) || (parseFloat(loan.sanctionedAmount || loan.loanAmount || 0) > 1000000 && loan.valuerName2);
     if (valuerFee > 0) {
-        const valObj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName.trim().toLowerCase());
-        const valAc = (valObj && valObj.savingsAc) ? `A/C: ${valObj.savingsAc}` : "VALUER A/C";
-        vouchers.push({
-            glCode: valAc,
-            glName: valuerName,
-            amount: valuerFee,
-            narration: `આજ રોજ સોના ધિરાણના ખુલેલ ખાતાના સોનાના દાગીના વેલ્યુએશન ફી પેટે જમા (ખાતા નં. ${accFormatted} - ${borrowerName})`
-        });
+        if (hasTwoValuers) {
+            const vName1 = loan.valuerName || "Approved Valuer 1";
+            const vName2 = loan.valuerName2;
+            const fee1 = parseFloat(loan.valuerFee1 || 1500);
+            const fee2 = parseFloat(loan.valuerFee2 || 1500);
+
+            // Valuer 1
+            const valObj1 = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === vName1.trim().toLowerCase());
+            const savingsAc1 = loan.valuerAc1 || loan.valuerAc || (valObj1 && valObj1.savingsAc ? valObj1.savingsAc : "");
+            const valAc1 = savingsAc1 ? `A/C: ${savingsAc1}` : "VALUER A/C";
+            vouchers.push({
+                key: "valuer_fee_1",
+                glCode: valAc1,
+                glName: `${vName1} (સોની વેલ્યુઅર ૧)`,
+                amount: fee1,
+                savingsAc: savingsAc1,
+                narration: `આજ રોજ સોના ધિરાણના ખુલેલ ખાતાના સોનાના દાગીના વેલ્યુએશન ફી પેટે જમા (ખાતા નં. ${accFormatted} - ${borrowerName})${savingsAc1 ? ' [બચત ખાતા નં. ' + savingsAc1 + ']' : ''}`
+            });
+
+            // Valuer 2
+            const valObj2 = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === vName2.trim().toLowerCase());
+            const savingsAc2 = loan.valuerAc2 || (valObj2 && valObj2.savingsAc ? valObj2.savingsAc : "");
+            const valAc2 = savingsAc2 ? `A/C: ${savingsAc2}` : "VALUER A/C";
+            vouchers.push({
+                key: "valuer_fee_2",
+                glCode: valAc2,
+                glName: `${vName2} (સોની વેલ્યુઅર ૨)`,
+                amount: fee2,
+                savingsAc: savingsAc2,
+                narration: `આજ રોજ સોના ધિરાણના ખુલેલ ખાતાના સોનાના દાગીના વેલ્યુએશન ફી પેટે જમા (ખાતા નં. ${accFormatted} - ${borrowerName})${savingsAc2 ? ' [બચત ખાતા નં. ' + savingsAc2 : ''}`
+            });
+        } else {
+            const valObj = (state.valuers || []).find(v => v.name && v.name.trim().toLowerCase() === valuerName.trim().toLowerCase());
+            const savingsAc = loan.valuerAc || loan.valuerAc1 || (valObj && valObj.savingsAc ? valObj.savingsAc : "");
+            const valAc = savingsAc ? `A/C: ${savingsAc}` : "VALUER A/C";
+            vouchers.push({
+                key: "valuer_fee",
+                glCode: valAc,
+                glName: valuerName,
+                amount: valuerFee,
+                savingsAc: savingsAc,
+                narration: `આજ રોજ સોના ધિરાણના ખુલેલ ખાતાના સોનાના દાગીના વેલ્યુએશન ફી પેટે જમા (ખાતા નં. ${accFormatted} - ${borrowerName})${savingsAc ? ' [બચત ખાતા નં. ' + savingsAc + ']' : ''}`
+            });
+        }
     }
 
     // 11. Other Charges
